@@ -1,0 +1,22 @@
+EDITS
+
+1.) Installed libopencv-dev:
+	sudp apt-get install libopencv-dev
+
+2.)	in Makefile: (or, if it exists, in Makefile_BACKUP):
+	Changed line 
+	NVCC=nvcc
+	to
+	NVCC=/usr/local/cuda/bin/nvcc # previously just nvcc
+
+3.) added an fpath_datafile var to setup_darknet.py
+
+4.)	added the -gpus 0 flag to the train command:
+	./darknet/darknet detector train "$data" "$train_cfg" -dont_show -gpus 0
+	according to
+	https://github.com/PeteHeine/yolo_v2_ros/issues/1 
+
+5.)	Changed the location of the cfg files to be in ./darknet/cfg/
+
+6.) Changed the Makefile settings output to an indented, "normal" for loop instead of using := (to work under python 3.6)
+
