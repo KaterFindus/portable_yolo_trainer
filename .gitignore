@@ -1,1 +1,9 @@
+# Files
 /darknet.tar.Z
+# Folders
+/darknet/
+/log_files/
+/Results/
+/training_set/
+/venv/
+/weights/
