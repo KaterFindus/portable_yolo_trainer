@@ -1,7 +1,7 @@
 EDITS
 
 1.) Installed libopencv-dev:
-	sudp apt-get install libopencv-dev
+	sudo apt-get install libopencv-dev
 
 2.)	in Makefile: (or, if it exists, in Makefile_BACKUP):
 	Changed line 

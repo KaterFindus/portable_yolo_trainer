@@ -5,6 +5,7 @@
 This script expects the training data (images as well as associated .txt files) to be in the folder
 'training_set'.
 
+ToDo:   CLEAN UP THIS HOT MESS OF A SCRIPT
 ToDo:   Depending on whether GPU is used or not, change NVCC line, and training command (-gpus 0)
 ToDo:   extract image extension from img files, don't rely on the setting in this script.
 ToDo:   Figure out how to monitor training output and then send a n email once training has reached
@@ -54,7 +55,7 @@ cfg_settings = {'batch': 32,
                 'coords': 5,
                 'masks': 3}
 
-make_quiet = 0                          # Use 'quiet' mode when (re-)building darknet from Makefile
+make_quiet = 1                          # Use 'quiet' mode when (re-)building darknet from Makefile
 
 # -----   E N D   O F   A D J U S T A B L E   S E T T I N G S   --------------------------------------------- #
 
@@ -182,20 +183,18 @@ if not os.path.isfile(fpath_makefile + '_BACKUP'):
 
 # Display makefile settings:
 print('Makefile settings (can be adjusted in setup_darknet.py):')
-longest = 0
-for param in list(makefile_settings.keys()):
-    if len(param) > longest:
-        longest = len(param)
-longest += 4
-[print('  ' + param.ljust(longest, '.') + str(val)) for param, val in makefile_settings.items()]
+for param, val in makefile_settings.items():
+    print(f'\t{param.ljust(15, ".")}{val}')
 
 with open(fpath_makefile, 'r') as mfile:
     lines = mfile.readlines()
-
 # Change values for Makefile settings
 for param, val in makefile_settings.items():
-    lines = [line.partition('=')[0] + '=' + str(val) + '\n' if line.startswith(param) else line for line in lines]
-
+    for i, line in enumerate(lines):
+        if line.startswith(param):
+            line_start = line.partition('=')[0]
+            new_line = line_start + f'= {val}\n'
+            lines[i] = new_line
 # Make sure each line gets a \n again:
 lines = [line + '\n' if not line.endswith('\n') else line for line in lines]
 logging.info(lines)

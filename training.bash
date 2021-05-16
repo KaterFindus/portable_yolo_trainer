@@ -1,5 +1,14 @@
 #!/bin/bash
-echo "$1"
+# Arguments: first optional argument "skipmake" to skip rebuilding the darknet with the settings provided in
+#             setup_darknet.py
+#            second optional argument: path to weights file to continue training with.
+echo "$# arguments were provided"
+for arg in "$@"
+do
+  echo "$arg"
+done
+
+
 echo 'Python version:'
 python3 --version
 
@@ -17,16 +26,27 @@ echo 'Activating virtual environment.'
 source venv/bin/activate
 
 # Run .py script
-echo 'Executing setup_darknet.py.'
-if [[ "$1" = "skipmake" ]]
-then ./setup_darknet.py skipmake
-else ./setup_darknet.py
+if [[ "$1" = "skipmake" ]]; then
+  echo "Make darknet will be skipped."
+  echo 'Executing setup_darknet.py.'
+  ./setup_darknet.py skipmake
+else
+  echo 'Executing setup_darknet.py.'
+  ./setup_darknet.py
 fi
 
-# Run YOLO training
-# Structure: ./darknet detector <train or test> <.data file> <.cfg file> <-dont_show flag>
-echo "Starting training."
-./Data/darknet/darknet detector train "$data" "$train_cfg" -dont_show -gpus 0
 
-# To continue using already calculated weights from a previous run:
-# ./Data/darknet/darknet detector train "$data" "$train_cfg" ./Data/darknet/backup/ -dont_show
+echo "Starting training."
+
+# Check if there are two arguments provided
+if [ $# -eq 2 ]; then
+  echo "Continuing using previously trained weights."
+  echo "Weights used:"
+  echo $2
+  ./Data/darknet/darknet detector train "$data" "$train_cfg" "$2" -gpus 0
+else
+  echo "Starting training from scratch."
+  # Structure: ./darknet detector <train or test> <.data file> <.cfg file> <-dont_show flag>
+  ./Data/darknet/darknet detector train "$data" "$train_cfg" -gpus 0
+fi
+
