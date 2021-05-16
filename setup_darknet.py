@@ -6,21 +6,14 @@ This script expects the training data (images as well as associated .txt files) 
 'training_set'.
 
 ToDo:   Depending on whether GPU is used or not, change NVCC line, and training command (-gpus 0)
-
 ToDo:   extract image extension from img files, don't rely on the setting in this script.
-
 ToDo:   Figure out how to monitor training output and then send a n email once training has reached
         satisfying results.
-
 ToDO:   allow for continuing with already saved weights. overwriting train.txt etc. should not be a problem.
         (do that in start_training.bash and use a -cont argument in main.bash perhaps?
         Better idea: set up a start_training.bash and a cont_training.bash)
-
 ToDo:   create requirements.txt
-
 ToDo:   Maybe use os.scandir() instead of os.listdir()
-
-
 Regarding image_converter.py:
 ToDo:   OR: use only a target image format and use a list of common source file types ['tif', 'png', 'jpg', 'bmp']
         but only copy the images that are already in target format.
@@ -35,8 +28,11 @@ import sys
 
 
 
-# region --------------   A D J U S T A B L E   S E T T I N G S   ---------------------------------------------------- #
+# --------------   A D J U S T A B L E   S E T T I N G S   ---------------------------------------------------- #
 # ToDo: Mavbe put the settings in their own cfg file? Although it might get confusing w/ all the cfg files at some point
+# Logging settings
+
+
 training_proportion = 0.8               # Proportion used for training. Testing: 1 - training_proportion
 img_ext = '.jpg'                        # Image extension of the images in the dataset (not all are accepted for
                                         # in training with darknet (tif produces errors, for example).
@@ -46,7 +42,7 @@ makefile_settings = {'GPU': 1,          # set GPU=1 and CUDNN=1 to speedup on GP
                      'CUDNN_HALF': 0,   # set CUDNN_HALF=1 to further speedup 3 x times (Mixed-precision on Tensor
                                         # Cores) GPU: Volta, Xavier, Turing and higher
                      'OPENCV': 1,       # Use OpenCV
-                     'DEBUG': 0,        # Build darknet in debug mode
+                     'DEBUG': 1,        # Build darknet in debug mode
                      'AVX': 0,          # set AVX=1 and OPENMP=1 to speedup on CPU (if error occurs then set AVX=0)
                      'OPENMP': 0,       # set AVX=1 and OPENMP=1 to speedup on CPU (if error occurs then set AVX=0)
                      'LIBSO': 0,
@@ -60,9 +56,9 @@ cfg_settings = {'batch': 32,
 
 make_quiet = 1                          # Use 'quiet' mode when (re-)building darknet from Makefile
 
-# endregion-----   E N D   O F   A D J U S T A B L E   S E T T I N G S   --------------------------------------------- #
+# -----   E N D   O F   A D J U S T A B L E   S E T T I N G S   --------------------------------------------- #
 
-# region # Paths and file names
+# Paths and file names
 fname_cfg_test = 'portable_yolo_trainer_TEST.cfg'
 fname_cfg_train = 'portable_yolo_trainer_TRAIN.cfg'
 fname_classes = 'classes.names'
@@ -72,19 +68,17 @@ fname_testing = 'test.txt'
 fname_training = 'train.txt'
 fpath_source = os.path.realpath(__file__).rpartition('/')[0] + '/'
 fpath_dataset = fpath_source + 'training_set/'
-fpath_darknet = fpath_source + 'darknet/'
+fpath_darknet = fpath_source + 'Data/darknet/'
 fpath_cfg_test = fpath_darknet + 'cfg/' + fname_cfg_test
 fpath_cfg_train = fpath_darknet + 'cfg/' + fname_cfg_train
 fpath_datafile = fpath_darknet + 'cfg/'
-fpath_logfile = fpath_source + 'log_files/'
+fpath_logfile = fpath_source + 'Data/log_files/'
 fpath_makefile = fpath_darknet + 'Makefile'
 fpath_weights_out = fpath_darknet + 'backup'
-fpath_weights_pretrained = fpath_source + 'weights/'
+fpath_weights_pretrained = fpath_source + 'Data/weights/'
 
-# Logging settings
 logging.basicConfig(filename=(fpath_logfile + fname_logfile), level=logging.DEBUG,
                     format='%(asctime)s [ %(levelname)s ]\t%(message)s')
-# logging.disable()
 
 logging.info('Source: ' + fpath_source)
 logging.info('Dataset: ' + fpath_dataset)
@@ -233,16 +227,14 @@ if not skip_make:
 else:
     print('Skipped make. ---------------------------------------------------------------------- [ WARNING ] ')
 
-# # Copy data file to darknet/cfg/
-# copy_cmd = 'cp ' + fpath_dataset + fname_datafile + ' ' + fpath_darknet + 'cfg/' + fname_datafile
-# logging.info('Copy command: ' + copy_cmd)
-# os.system(copy_cmd)
-# print('Copied .data file into ./darknet/cfg/')
-# print()
-# endregion
+# Copy data file to darknet/cfg/
+copy_cmd = 'cp ' + fpath_dataset + fname_datafile + ' ' + fpath_darknet + 'cfg/' + fname_datafile
+logging.info('Copy command: ' + copy_cmd)
+os.system(copy_cmd)
+print('Copied .data file into ./darknet/cfg/')
 
 
-# region # create cfg files for training and testing
+# create cfg files for training and testing
 """
 Create cfg files for training and for testing (if only one dataset is used)
 """
@@ -329,7 +321,7 @@ with open(fpath_cfg_test, 'w') as cfg_w:
 
 # endregion
 
-print('setup_darknet.py completed.')
+print('\nSetup_darknet.py completed.\n')
 for i in range(5, 0, -1):
     print('Starting training in', int(i), 'seconds.', end='\r')
     time.sleep(1)
