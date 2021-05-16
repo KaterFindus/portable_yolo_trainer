@@ -67,7 +67,7 @@ fname_logfile = 'log_setup_darknet_' + time.strftime('%Y-%m-%d_%H-%M', time.loca
 fname_testing = 'test.txt'
 fname_training = 'train.txt'
 fpath_source = os.path.realpath(__file__).rpartition('/')[0] + '/'
-fpath_dataset = fpath_source + 'training_set/'
+fpath_dataset = fpath_source + 'Data/training_set/'
 fpath_darknet = fpath_source + 'Data/darknet/'
 fpath_cfg_test = fpath_darknet + 'cfg/' + fname_cfg_test
 fpath_cfg_train = fpath_darknet + 'cfg/' + fname_cfg_train
@@ -79,7 +79,6 @@ fpath_weights_pretrained = fpath_source + 'Data/weights/'
 
 logging.basicConfig(filename=(fpath_logfile + fname_logfile), level=logging.DEBUG,
                     format='%(asctime)s [ %(levelname)s ]\t%(message)s')
-
 logging.info('Source: ' + fpath_source)
 logging.info('Dataset: ' + fpath_dataset)
 logging.info('Darknet: ' + fpath_darknet)
@@ -87,11 +86,12 @@ logging.info('Pretrained weights: ' + fpath_weights_pretrained)
 logging.info('Makefile: ' + fpath_makefile)
 logging.info('.cfg (train): ' + fpath_cfg_train)
 logging.info('.cfg (test): ' + fpath_cfg_test)
+logging.info('.data file: ' + fpath_datafile)
 
 logging.info('Training proportion: ' + str(training_proportion))
-# endregion
 
-# region # Creating required files: class.files, train.txt, data.data
+
+# Creating required files: class.files, train.txt, data.data
 
 """
 This part of the script creates the train.txt and test.txt files that contain the links to the corresponding
@@ -112,12 +112,10 @@ files = [(fpath_dataset + name) for name in files]
 # Exclude .txt files
 names_img = [name for name in files if name.endswith(img_ext)]
 
-
 # Make sure there's a .txt file for each IMG file.
 names_txt = [name for name in files if name.endswith('.txt')]
 assert len(names_img) == len(names_txt), f'IMG and TXT file count does not match. Are all images {img_ext}?'
 logging.info('File counts match.')
-
 
 # Split into train and test set:
 # Create random index list
@@ -127,12 +125,14 @@ rand_index = random.sample(range(fcount), int(fcount * training_proportion))
 train_names_img = sorted([names_img[i] for i in rand_index])
 test_names_img = sorted(name for name in names_img if name not in train_names_img)
 print()  # Give the output some air
-print('Total img count: {} files.'.format(fcount))
-print('Train/Test ratio: {0}/{1}'.format(training_proportion, 1 - training_proportion))
-print('Train set:\t{} files.'.format(len(train_names_img)))
-print('Test set:\t{} files.'.format(len(test_names_img)))
+print(f'Total img count: {fcount} files.')
+print(f'Train/Test ratio: {training_proportion}/{1 - training_proportion}')
+print(f'Train set:\t{len(train_names_img)} files.')
+print(f'Test set:\t{len(test_names_img)} files.')
+logging.info(f'Train/Test ratio: {training_proportion}/{1 - training_proportion}')
+logging.info(f'Train set:\t{len(train_names_img)} files.')
+logging.info(f'Test set:\t{len(test_names_img)} files.')
 print()
-
 
 # Create files that give YOLO the paths to each file in each set
 with open(fpath_dataset + fname_testing, 'w') as f:
@@ -142,7 +142,6 @@ with open(fpath_dataset + fname_training, 'w') as f:
 logging.info('Created "test.txt" file in:\t\t' + fpath_dataset)
 logging.info('Created "train.txt" file in:\t\t' + fpath_dataset)
 
-
 # Transform classes.txt to classes.names
 with open(fpath_dataset + 'classes.txt', 'r') as f:
     classes = f.readlines()
@@ -150,13 +149,14 @@ with open(fpath_dataset + 'classes.txt', 'r') as f:
         cf.writelines(classes)
 logging.info('Created "' + fname_classes + '" file in:\t' + fpath_dataset)
 
-
 # Create labelled_data.data file:
 class_count = len(classes)
-class_names = [name for name in classes]
+# class_names = [name for name in classes]
 with open(fpath_datafile + fname_datafile, 'w') as f:
     f.write('classes = ' + str(class_count) + '\n')
     f.write('train = ' + fpath_dataset + 'train.txt' + '\n')
+    print('train = ' + fpath_dataset + 'train.txt' + '\n')
+
     f.write('valid = ' + fpath_dataset + 'test.txt' + '\n')
     f.write('names = ' + fpath_dataset + 'classes.names' + '\n')
     f.write('backup = ' + fpath_weights_out)
@@ -165,10 +165,9 @@ logging.info('Created "' + fname_datafile + '" file in:\t' + fpath_datafile)
 
 logging.info('Weights will be stored in:\t\t' + os.getcwd() + '/' + fpath_weights_out)
 
-# endregion
 
 
-# region # Preparing the Makefile and (re-) building yolo. #####
+# Preparing the Makefile and (re-) building yolo. #####
 """
 Writes specified settings into "Makefile" in the darknet directory and then makes darknet using these settings.
 Also copies the .data file specifying the different file locations into darknet's cfg directory.
@@ -226,12 +225,6 @@ if not skip_make:
     print('Done rebuilding darknet.')
 else:
     print('Skipped make. ---------------------------------------------------------------------- [ WARNING ] ')
-
-# Copy data file to darknet/cfg/
-copy_cmd = 'cp ' + fpath_dataset + fname_datafile + ' ' + fpath_darknet + 'cfg/' + fname_datafile
-logging.info('Copy command: ' + copy_cmd)
-os.system(copy_cmd)
-print('Copied .data file into ./darknet/cfg/')
 
 
 # create cfg files for training and testing
