@@ -42,7 +42,7 @@ img_ext = '.jpg'                        # Image extension of the images in the d
                                         # in training with darknet (tif produces errors, for example).
 
 makefile_settings = {'GPU': 1,          # set GPU=1 and CUDNN=1 to speedup on GPU
-                     'CUDNN': 0,        # set GPU=1 and CUDNN=1 to speedup on GPU
+                     'CUDNN': 1,        # set GPU=1 and CUDNN=1 to speedup on GPU
                      'CUDNN_HALF': 0,   # set CUDNN_HALF=1 to further speedup 3 x times (Mixed-precision on Tensor
                                         # Cores) GPU: Volta, Xavier, Turing and higher
                      'OPENCV': 1,       # Use OpenCV
@@ -58,7 +58,7 @@ cfg_settings = {'batch': 32,
                 'coords': 5,
                 'masks': 3}
 
-make_quiet = 0                          # Use 'quiet' mode when (re-)building darknet from Makefile
+make_quiet = 1                          # Use 'quiet' mode when (re-)building darknet from Makefile
 
 # endregion-----   E N D   O F   A D J U S T A B L E   S E T T I N G S   --------------------------------------------- #
 
@@ -118,19 +118,20 @@ files = [(fpath_dataset + name) for name in files]
 # Exclude .txt files
 names_img = [name for name in files if name.endswith(img_ext)]
 
+
 # Make sure there's a .txt file for each IMG file.
 names_txt = [name for name in files if name.endswith('.txt')]
-assert len(names_img) == len(names_txt), 'IMG and TXT file count does not match. Are all images {}?'.format(img_ext)
+assert len(names_img) == len(names_txt), f'IMG and TXT file count does not match. Are all images {img_ext}?'
 logging.info('File counts match.')
 
+
+# Split into train and test set:
 # Create random index list
 fcount = len(names_img)
 rand_index = random.sample(range(fcount), int(fcount * training_proportion))
-
 # Split image files
 train_names_img = sorted([names_img[i] for i in rand_index])
 test_names_img = sorted(name for name in names_img if name not in train_names_img)
-
 print()  # Give the output some air
 print('Total img count: {} files.'.format(fcount))
 print('Train/Test ratio: {0}/{1}'.format(training_proportion, 1 - training_proportion))
@@ -138,34 +139,36 @@ print('Train set:\t{} files.'.format(len(train_names_img)))
 print('Test set:\t{} files.'.format(len(test_names_img)))
 print()
 
+
+# Create files that give YOLO the paths to each file in each set
 with open(fpath_dataset + fname_testing, 'w') as f:
     f.writelines([name + '\n' for name in test_names_img])
 with open(fpath_dataset + fname_training, 'w') as f:
     f.writelines([name + '\n' for name in train_names_img])
-
 logging.info('Created "test.txt" file in:\t\t' + fpath_dataset)
 logging.info('Created "train.txt" file in:\t\t' + fpath_dataset)
+
 
 # Transform classes.txt to classes.names
 with open(fpath_dataset + 'classes.txt', 'r') as f:
     classes = f.readlines()
     with open(fpath_dataset + fname_classes, 'w') as cf:
         cf.writelines(classes)
-
 logging.info('Created "' + fname_classes + '" file in:\t' + fpath_dataset)
+
 
 # Create labelled_data.data file:
 class_count = len(classes)
 class_names = [name for name in classes]
-
 with open(fpath_datafile + fname_datafile, 'w') as f:
     f.write('classes = ' + str(class_count) + '\n')
     f.write('train = ' + fpath_dataset + 'train.txt' + '\n')
     f.write('valid = ' + fpath_dataset + 'test.txt' + '\n')
     f.write('names = ' + fpath_dataset + 'classes.names' + '\n')
     f.write('backup = ' + fpath_weights_out)
-
 logging.info('Created "' + fname_datafile + '" file in:\t' + fpath_datafile)
+
+
 logging.info('Weights will be stored in:\t\t' + os.getcwd() + '/' + fpath_weights_out)
 
 # endregion
@@ -182,7 +185,6 @@ if not os.path.isfile(fpath_makefile + '_BACKUP'):
     with open(fpath_makefile, 'r') as rfile:
         with open(fpath_makefile + '_BACKUP', 'w') as wfile:
             wfile.writelines(rfile.readlines())
-
 
 
 # Display makefile settings:
@@ -222,6 +224,7 @@ if not skip_make:
     os.chdir(fpath_darknet)
     print('Rebuilding darknet with above settings.\nThis might take a few minutes. Please be patient.')
     if make_quiet:
+        print('Building darknet in quiet mode.')
         subprocess.run(['make'], stderr=subprocess.DEVNULL, stdout=subprocess.DEVNULL)
     else:
         subprocess.run(['make'])

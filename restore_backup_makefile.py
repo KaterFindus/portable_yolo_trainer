@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+"""Checks if the makefile_BACKUP exists and uses it as the makefile."""
 import os
 
 fpath_source = os.path.realpath(__file__).rpartition('/')[0] + '/'
