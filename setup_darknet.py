@@ -10,7 +10,7 @@ ToDo:   extract image extension from img files, don't rely on the setting in thi
 ToDo:   Figure out how to monitor training output and then send a n email once training has reached
         satisfying results.
 ToDO:   allow for continuing with already saved weights. overwriting train.txt etc. should not be a problem.
-        (do that in start_training.bash and use a -cont argument in main.bash perhaps?
+        (do that in start_training.bash and use a -cont argument in training.bash perhaps?
         Better idea: set up a start_training.bash and a cont_training.bash)
 ToDo:   create requirements.txt
 ToDo:   Maybe use os.scandir() instead of os.listdir()
@@ -54,7 +54,7 @@ cfg_settings = {'batch': 32,
                 'coords': 5,
                 'masks': 3}
 
-make_quiet = 1                          # Use 'quiet' mode when (re-)building darknet from Makefile
+make_quiet = 0                          # Use 'quiet' mode when (re-)building darknet from Makefile
 
 # -----   E N D   O F   A D J U S T A B L E   S E T T I N G S   --------------------------------------------- #
 
@@ -315,7 +315,7 @@ with open(fpath_cfg_test, 'w') as cfg_w:
 # endregion
 
 print('\nSetup_darknet.py completed.\n')
-for i in range(5, 0, -1):
+for i in range(3, 0, -1):
     print('Starting training in', int(i), 'seconds.', end='\r')
     time.sleep(1)
 print()

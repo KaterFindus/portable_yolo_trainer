@@ -12,6 +12,6 @@ echo "Starting training."
 ./Data/darknet/darknet detector train "$data" "$train_cfg" -dont_show -gpus 0
 
 # To continue using already calculated weights from a previous run:
-# ./darknet/darknet detector train "$data" "$train_cfg" <path-to-previous-weights> -dont_show
+# ./Data/darknet/darknet detector train "$data" "$train_cfg" ./Data/darknet/backup/ -dont_show
 
 

@@ -7,4 +7,4 @@ test_cfg="${SOURCE_DIR}/Data/darknet/cfg/portable_yolo_trainer_TEST.cfg"
 cd "${SOURCE_DIR}"
 
 echo "Starting testing."
-./Data/darknet/darknet detector test "$data" "$test_cfg"
+./Data/darknet detector test "$data" "$test_cfg"
